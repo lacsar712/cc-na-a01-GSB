@@ -1,9 +1,10 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
-from inspection.models import Inspection
+from inspection.models import Comparison, Inspection
 from inspection.rules import judge
 
 
@@ -84,3 +85,57 @@ def create_view(request):
             )
             return redirect("detail", pk=row.pk)
     return render(request, "form.html", {"error": error})
+
+
+@login_required
+def comparison_list_view(request):
+    rows = Comparison.objects.select_related("before", "after").all()
+    return render(request, "comparison_list.html", {"rows": rows})
+
+
+@login_required
+def comparison_detail_view(request, pk):
+    comparison = get_object_or_404(
+        Comparison.objects.select_related("before", "after"), pk=pk
+    )
+    return render(request, "comparison_detail.html", {"comparison": comparison})
+
+
+@login_required
+@require_http_methods(["POST"])
+def comparison_create_view(request):
+    # 只有持灯账号能挑选两条记录生成对读；只读账号直接拒绝。
+    if not _can_write(request.user):
+        return HttpResponseForbidden("仅巡检员可生成灯质对读")
+    raw_ids = request.POST.getlist("pick")
+    try:
+        ids = [int(v) for v in raw_ids]
+    except ValueError:
+        messages.error(request, "请勾选两条巡检记录")
+        return redirect("list")
+    if len(ids) != 2 or len(set(ids)) != 2:
+        messages.error(request, "对读需要勾选同一座灯标的两条不同记录")
+        return redirect("list")
+    records = list(
+        Inspection.objects.filter(id__in=ids).order_by("created_at", "id")
+    )
+    if len(records) != 2:
+        messages.error(request, "所选巡检记录不存在")
+        return redirect("list")
+    before, after = records
+    if before.aid_code != after.aid_code:
+        messages.error(request, "两条记录必须属于同一座灯标（编号相同）")
+        return redirect("list")
+
+    # 差额与掉级结论一律由服务端计算并落库，模板只负责展示。
+    cd_diff = after.measured_cd - before.measured_cd
+    dropped_to_failed = before.verdict == "合格" and after.verdict == "不合格"
+    comparison = Comparison.objects.create(
+        aid_code=before.aid_code,
+        before=before,
+        after=after,
+        cd_diff=cd_diff,
+        dropped_to_failed=dropped_to_failed,
+        created_by=request.user.username,
+    )
+    return redirect("comparison_detail", pk=comparison.pk)

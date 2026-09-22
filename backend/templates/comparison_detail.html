@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}灯质对读 · {{ comparison.aid_code }}{% endblock %}
+{% block body %}
+<h1>灯质对读 · {{ comparison.aid_code }}</h1>
+<table>
+  <thead>
+    <tr>
+      <th>更换灯器前</th>
+      <th>对读结论（服务端核算）</th>
+      <th>更换灯器后</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        亮度：{{ comparison.before.measured_cd }} cd<br />
+        要求：{{ comparison.before.required_cd }} cd<br />
+        登记时间：{{ comparison.before.created_at|date:"Y-m-d H:i" }}
+      </td>
+      <td rowspan="3">
+        <p>坎德拉差额：
+          <strong class="{% if comparison.cd_diff < 0 %}bad{% else %}ok{% endif %}">
+            {{ comparison.cd_diff|floatformat:"-1" }} cd
+          </strong>
+          （后 − 前）
+        </p>
+        <p>
+          {% if comparison.dimmed %}变暗 {{ comparison.cd_diff_magnitude|floatformat:"-1" }} cd{% else %}亮度未下降{% endif %}
+        </p>
+        <p class="{% if comparison.dropped_to_failed %}bad{% else %}ok{% endif %}">
+          {% if comparison.dropped_to_failed %}
+            结论已由「合格」掉成「不合格」
+          {% else %}
+            结论没有从合格掉成不合格
+          {% endif %}
+        </p>
+        <p>对读生成人：{{ comparison.created_by }}</p>
+      </td>
+      <td>
+        亮度：{{ comparison.after.measured_cd }} cd<br />
+        要求：{{ comparison.after.required_cd }} cd<br />
+        登记时间：{{ comparison.after.created_at|date:"Y-m-d H:i" }}
+      </td>
+    </tr>
+    <tr>
+      <td>方位偏差：{{ comparison.before.bearing_error_deg }} 度</td>
+      <td>方位偏差：{{ comparison.after.bearing_error_deg }} 度</td>
+    </tr>
+    <tr>
+      <td>
+        判词：
+        <span class="{% if comparison.before.verdict == '合格' %}ok{% else %}bad{% endif %}">
+          {{ comparison.before.verdict }} · {{ comparison.before.note }}
+        </span>
+      </td>
+      <td>
+        判词：
+        <span class="{% if comparison.after.verdict == '合格' %}ok{% else %}bad{% endif %}">
+          {{ comparison.after.verdict }} · {{ comparison.after.note }}
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><a href="{% url 'comparison_list' %}">返回对读列表</a></p>
+{% endblock %}

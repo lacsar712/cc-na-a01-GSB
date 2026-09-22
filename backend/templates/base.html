@@ -23,11 +23,19 @@
     <strong>航标灯光巡检台</strong>
     {% if user.is_authenticated %}
       <a href="{% url 'list' %}">巡检记录</a>
+      <a href="{% url 'comparison_list' %}">灯质对读</a>
       {% if can_write %}<a href="{% url 'create' %}">登记</a>{% endif %}
       <span style="margin-left:auto">{{ user.username }}</span>
       <a href="{% url 'logout' %}">退出</a>
     {% endif %}
   </header>
-  <main>{% block body %}{% endblock %}</main>
+  <main>
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}<li class="err">{{ message }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% block body %}{% endblock %}
+  </main>
 </body>
 </html>

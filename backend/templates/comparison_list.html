@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>灯质对读</h1>
+<table>
+  <thead>
+    <tr><th>编号</th><th>更换前</th><th>更换后</th><th>坎德拉差额</th><th>结论变化</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for row in rows %}
+    <tr>
+      <td>{{ row.aid_code }}</td>
+      <td>{{ row.before.measured_cd }} cd ·
+        <span class="{% if row.before.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ row.before.verdict }}</span>
+      </td>
+      <td>{{ row.after.measured_cd }} cd ·
+        <span class="{% if row.after.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ row.after.verdict }}</span>
+      </td>
+      <td class="{% if row.cd_diff < 0 %}bad{% else %}ok{% endif %}">{{ row.cd_diff|floatformat:"-1" }} cd</td>
+      <td class="{% if row.dropped_to_failed %}bad{% else %}ok{% endif %}">
+        {% if row.dropped_to_failed %}已由合格掉为不合格{% else %}未掉为不合格{% endif %}
+      </td>
+      <td><a href="{% url 'comparison_detail' row.pk %}">对读</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6">还没有对读单</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if not can_write %}
+<p>只读账号可打开已生成的对读，挑选记录请由巡检员操作。</p>
+{% endif %}
+{% endblock %}

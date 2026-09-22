@@ -1,20 +1,36 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>巡检记录</h1>
+{% if can_write %}
+<form method="post" action="{% url 'comparison_create' %}">
+  {% csrf_token %}
+  <p>勾选同一座灯标更换灯器前后的两条记录，生成灯质对读。</p>
+{% endif %}
 <table>
-  <thead><tr><th>编号</th><th>实测光强</th><th>结论</th><th>说明</th><th></th></tr></thead>
+  <thead>
+    <tr>
+      {% if can_write %}<th>对读</th>{% endif %}
+      <th>编号</th><th>实测光强</th><th>方位偏差</th><th>结论</th><th>说明</th><th></th>
+    </tr>
+  </thead>
   <tbody>
   {% for row in rows %}
     <tr>
+      {% if can_write %}<td><input type="checkbox" name="pick" value="{{ row.id }}" /></td>{% endif %}
       <td>{{ row.aid_code }}</td>
-      <td>{{ row.measured_cd }}</td>
+      <td>{{ row.measured_cd }} cd / 要求 {{ row.required_cd }}</td>
+      <td>{{ row.bearing_error_deg }} 度</td>
       <td class="{% if row.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ row.verdict }}</td>
       <td>{{ row.note }}</td>
       <td><a href="{% url 'detail' row.pk %}">详情</a></td>
     </tr>
   {% empty %}
-    <tr><td colspan="5">还没有记录</td></tr>
+    <tr><td colspan="{% if can_write %}7{% else %}6{% endif %}">还没有记录</td></tr>
   {% endfor %}
   </tbody>
 </table>
+{% if can_write %}
+  <button type="submit">生成对读</button>
+</form>
+{% endif %}
 {% endblock %}
