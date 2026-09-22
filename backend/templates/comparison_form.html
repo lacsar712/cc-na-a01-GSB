@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}生成灯质对读 · 航标灯光巡检台{% endblock %}
+{% block body %}
+<h1>生成灯质对读</h1>
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+<p class="muted">下列每个编号取最近的两条登记，点「对读」即由服务端计算光强差额并生成一页对读。</p>
+<table>
+  <thead><tr><th>编号</th><th>换灯器前（较早一条）</th><th>换灯器后（较新一条）</th><th></th></tr></thead>
+  <tbody>
+  {% for c in candidates %}
+    <tr>
+      <td>{{ c.code }}</td>
+      <td>#{{ c.before.pk }} · {{ c.before.measured_cd }} cd · {{ c.before.verdict }}</td>
+      <td>#{{ c.after.pk }} · {{ c.after.measured_cd }} cd · {{ c.after.verdict }}</td>
+      <td>
+        <form method="post" action="{% url 'comparison_create' %}" style="display:inline">
+          {% csrf_token %}
+          <input type="hidden" name="before_id" value="{{ c.before.pk }}" />
+          <input type="hidden" name="after_id" value="{{ c.after.pk }}" />
+          <button type="submit">对读</button>
+        </form>
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">还没有哪个编号满两条记录，无法生成对读。</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p><a href="{% url 'list' %}">返回巡检记录</a></p>
+{% endblock %}

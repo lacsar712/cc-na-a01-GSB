@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ comp.aid_code }} 灯质对读 · 航标灯光巡检台{% endblock %}
+{% block body %}
+<h1>{{ comp.aid_code }} 灯质对读</h1>
+<p class="muted">
+  对读单 #{{ comp.pk }} · 建单人 {{ comp.created_by }} · {{ comp.created_at|date:"Y-m-d H:i" }}。
+  下方坎德拉差额与结论变化均由服务端计算并落库，本页只显示已存好的结果，不在浏览器端做减法。
+</p>
+
+<table class="compare">
+  <thead>
+    <tr>
+      <th class="side">换灯器前 · 记录 #{{ comp.before.pk }}</th>
+      <th class="mid">服务端对读结果</th>
+      <th class="side">换灯器后 · 记录 #{{ comp.after.pk }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="side">
+        <div style="font-size:26px;font-weight:700">{{ comp.before.measured_cd }}</div>
+        <div class="muted">实测亮度 / cd（要求 {{ comp.before.required_cd }}）</div>
+      </td>
+      <td class="mid">
+        <div style="font-size:18px" class="{% if comp.cd_delta < 0 %}delta-down{% elif comp.cd_delta > 0 %}delta-up{% endif %}">
+          {% if comp.cd_delta < 0 %}↓ 变暗{% elif comp.cd_delta > 0 %}↑ 变亮{% else %}＝ 持平{% endif %}
+        </div>
+        <div style="font-size:26px;font-weight:700" class="{% if comp.cd_delta < 0 %}delta-down{% elif comp.cd_delta > 0 %}delta-up{% endif %}">
+          {{ comp.cd_delta|floatformat:"-1" }} cd
+        </div>
+        <div class="muted">光强差额 = 换灯器后 − 换灯器前（{{ comp.after.measured_cd|floatformat:"-1" }} − {{ comp.before.measured_cd|floatformat:"-1" }}），由服务端算出</div>
+      </td>
+      <td class="side">
+        <div style="font-size:26px;font-weight:700">{{ comp.after.measured_cd }}</div>
+        <div class="muted">实测亮度 / cd（要求 {{ comp.after.required_cd }}）</div>
+      </td>
+    </tr>
+    <tr>
+      <td class="side">
+        <div style="font-size:20px">{{ comp.before.bearing_error_deg }}°</div>
+        <div class="muted">方位偏角（限值 ±2°）</div>
+      </td>
+      <td class="mid muted">方位偏角前后并陈，不计入光强差额</td>
+      <td class="side">
+        <div style="font-size:20px">{{ comp.after.bearing_error_deg }}°</div>
+        <div class="muted">方位偏角（限值 ±2°）</div>
+      </td>
+    </tr>
+    <tr>
+      <td class="side">
+        <span class="badge {% if comp.before.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ comp.before.verdict }}</span>
+        <div class="muted">{{ comp.before.note }} · {{ comp.before.created_by }} {{ comp.before.created_at|date:"m-d H:i" }}</div>
+      </td>
+      <td class="mid">
+        {% if comp.downgraded %}
+          <div class="badge bad" style="font-size:18px;padding:6px 16px;">合格 → 不合格</div>
+          <div class="bad" style="margin-top:6px;font-weight:700;">结论已从合格掉成不合格</div>
+        {% else %}
+          <div class="badge ok" style="font-size:16px;padding:6px 16px;">未由合格掉为不合格</div>
+          <div class="muted" style="margin-top:6px;">{{ comp.before.verdict }} → {{ comp.after.verdict }}</div>
+        {% endif %}
+      </td>
+      <td class="side">
+        <span class="badge {% if comp.after.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ comp.after.verdict }}</span>
+        <div class="muted">{{ comp.after.note }} · {{ comp.after.created_by }} {{ comp.after.created_at|date:"m-d H:i" }}</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-top:16px">
+  <a href="{% url 'comparison_list' %}">返回灯质对读列表</a> ·
+  <a href="{% url 'list' %}">巡检记录</a>
+</p>
+{% endblock %}

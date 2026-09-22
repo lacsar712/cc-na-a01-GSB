@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}灯质对读 · 航标灯光巡检台{% endblock %}
+{% block body %}
+<h1>灯质对读</h1>
+<p class="muted">同一座灯标更换灯器前后两条同号登记的并排对读；坎德拉差额由服务端计算并落库，本页不做任何减法。</p>
+{% if can_write %}<p><a href="{% url 'comparison_create' %}">挑选两条同号登记生成对读</a> · 也可在「巡检记录」列表勾选两条后生成</p>{% endif %}
+<table>
+  <thead><tr><th>编号</th><th>换灯器前实测</th><th>换灯器后实测</th><th>光强差额（后−前）</th><th>结论变化</th><th></th></tr></thead>
+  <tbody>
+  {% for comp in comparisons %}
+    <tr>
+      <td>{{ comp.aid_code }}</td>
+      <td>{{ comp.before.measured_cd }}</td>
+      <td>{{ comp.after.measured_cd }}</td>
+      <td class="{% if comp.cd_delta < 0 %}delta-down{% elif comp.cd_delta > 0 %}delta-up{% endif %}">{{ comp.cd_delta|floatformat:"-1" }}</td>
+      <td class="{% if comp.downgraded %}bad{% else %}ok{% endif %}">
+        {% if comp.downgraded %}合格 → 不合格{% else %}未掉为不合格{% endif %}
+      </td>
+      <td><a href="{% url 'comparison' comp.pk %}">打开对读</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6">还没有对读单{% if can_write %}，可到「巡检记录」勾选两条同号登记生成{% endif %}。</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

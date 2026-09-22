@@ -16,6 +16,15 @@
     input { width: 100%; padding: 8px; box-sizing: border-box; }
     button { margin-top: 14px; background: #0f3d3e; color: #fff; border: 0; padding: 8px 16px; }
     .err { color: #9b1c1c; }
+    .panel { background: #fff; padding: 16px; }
+    .compare { width: 100%; border-collapse: collapse; background: #fff; }
+    .compare th, .compare td { border: 1px solid #d5e0dc; padding: 12px 14px; text-align: center; vertical-align: middle; }
+    .compare thead th { background: #e3eeeb; }
+    .compare .side { width: 32%; } .compare .mid { width: 36%; background: #f4f9f7; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 13px; }
+    .badge.ok { background: #e2f3e9; } .badge.bad { background: #f8e3e3; }
+    .delta-down { color: #9b1c1c; font-weight: 700; } .delta-up { color: #0b6b3a; font-weight: 700; }
+    .muted { color: #5a6b66; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -23,6 +32,7 @@
     <strong>航标灯光巡检台</strong>
     {% if user.is_authenticated %}
       <a href="{% url 'list' %}">巡检记录</a>
+      <a href="{% url 'comparison_list' %}">灯质对读</a>
       {% if can_write %}<a href="{% url 'create' %}">登记</a>{% endif %}
       <span style="margin-left:auto">{{ user.username }}</span>
       <a href="{% url 'logout' %}">退出</a>

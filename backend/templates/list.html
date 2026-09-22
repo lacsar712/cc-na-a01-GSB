@@ -1,20 +1,55 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>巡检记录</h1>
+{% if can_write %}
+<p class="muted">同一座灯标有两条同号登记时，勾选这两条（更换灯器前、后各一），可生成一页灯质对读。</p>
+<form method="post" action="{% url 'comparison_create' %}">
+  {% csrf_token %}
+  <table>
+    <thead><tr><th>勾选</th><th>编号</th><th>实测光强</th><th>方位偏差</th><th>结论</th><th>说明</th><th></th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td><input type="checkbox" name="records" value="{{ row.pk }}" {% if not row.pairable %}disabled title="该编号暂无两条记录"{% endif %} /></td>
+        <td>{{ row.aid_code }}</td>
+        <td>{{ row.measured_cd }}</td>
+        <td>{{ row.bearing_error_deg }}°</td>
+        <td class="{% if row.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ row.verdict }}</td>
+        <td>{{ row.note }}</td>
+        <td><a href="{% url 'detail' row.pk %}">详情</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7">还没有记录</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <button type="submit">对所选两条生成对读</button>
+</form>
+{% else %}
 <table>
-  <thead><tr><th>编号</th><th>实测光强</th><th>结论</th><th>说明</th><th></th></tr></thead>
+  <thead><tr><th>编号</th><th>实测光强</th><th>方位偏差</th><th>结论</th><th>说明</th><th>对读</th><th></th></tr></thead>
   <tbody>
   {% for row in rows %}
     <tr>
       <td>{{ row.aid_code }}</td>
       <td>{{ row.measured_cd }}</td>
+      <td>{{ row.bearing_error_deg }}°</td>
       <td class="{% if row.verdict == '合格' %}ok{% else %}bad{% endif %}">{{ row.verdict }}</td>
       <td>{{ row.note }}</td>
+      <td>
+        {% if row.comparison_pk %}
+          <a href="{% url 'comparison' row.comparison_pk %}">查看已生成对读</a>
+        {% else %}
+          <span class="muted">—</span>
+        {% endif %}
+      </td>
       <td><a href="{% url 'detail' row.pk %}">详情</a></td>
     </tr>
   {% empty %}
-    <tr><td colspan="5">还没有记录</td></tr>
+    <tr><td colspan="7">还没有记录</td></tr>
   {% endfor %}
   </tbody>
 </table>
+<p class="muted">只读账号可打开已生成的对读，不能挑选记录。</p>
+{% endif %}
 {% endblock %}
